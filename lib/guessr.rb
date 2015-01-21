@@ -22,6 +22,12 @@ module Guessr
         self.turns -= 1 unless self.answer.include?(letter)
       end
 
+      class NumberGuessing < Base
+        validates :answer, presence: true
+          format: { with: /^[1-9]+$/, message: "only numbers allowed"}
+        before_save :set_finished!, if: :finished?
+      end
+
       private
       def finished?
         self.turns.zero? || self.answer.chars.all? { |l| self.guesses.include?(l) }
@@ -63,6 +69,27 @@ module Guessr
         remove_column Hangman.table_name, :player_id
       end
     end
+
+    class NumberGuessingGameSchema < V 1.1
+      def self.up
+        create_table Player.table_name do |t|
+          t.string :name
+          t.timestamps
+        end
+
+        create_table NumberGuessing.table_name do |t|
+          t.integer :turns, :default => 10
+          t.string :answer
+          t.string :guess
+          t.boolean :finished
+          t.timestamps
+        end
+      end
+
+      def self.down
+        drop_table Player.table_name
+        drop_table NumberGuessing.table_name
+      end
   end
 end
 
